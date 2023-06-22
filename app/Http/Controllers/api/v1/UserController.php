@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
@@ -16,7 +17,18 @@ class UserController extends Controller
         if (empty($users)) {
             return response()->json(['message' => 'No users registered'], 200);
         }
-        return response()->json($users, 200);
+        return response()->json(['users' => $users], 200);
+    }
+
+    public function getAllClients()
+    {
+        $users = User::where('type_user', 'C')->select('id', 'name', 'email', 'type_user', 'points', 'status')->get();
+
+        if (empty($users)) {
+            return response()->json(['message' => 'No users registered'], 200);
+        }
+        
+        return response()->json(['users' => $users], 200);
     }
 
     public function createUser(Request $request)
@@ -49,7 +61,9 @@ class UserController extends Controller
 
         $user->makeHidden(['password']);
 
-        return response()->json(['data' => $user, 'message' => 'User successfully created!'], 201);
+        $token = JWTAuth::fromUser($user);
+
+        return response()->json(['token' => $token, 'user' => $user, 'message' => 'User successfully created!'], 201);
     }
 
     public function getUser($id)
@@ -60,11 +74,28 @@ class UserController extends Controller
             response()->json(['message' => 'User not found'], 404);
         }
 
-        return response()->json($user, 200);
+        return response()->json(['user' => $user], 200);
+    }
+
+    public function recoverUserInfo(Request $request)
+    {
+        $user = $request->user;
+
+        if(!$user){
+            response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->makeHidden('password');
+
+        return response()->json(['user' => $user], 200);
     }
 
     public function updateUser(Request $request, string $id)
     {
+        if ($id != $request->user->id) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $validatedData = $request->validate([
             'name' => 'required|min:1',
             'email' => 'required|email|unique:users',
@@ -78,10 +109,6 @@ class UserController extends Controller
             'email.unique' => 'This email address is already in use.',
         ]);
 
-        if (empty($validatedData)) {
-            return response()->json(['message' => 'Bad Request'], 400);
-        }
-
         $user = User::find($id);
         
         if(!$user){
@@ -92,7 +119,9 @@ class UserController extends Controller
 
         $user->makeHidden(['password']);
 
-        return response()->json(['data' => $user, 'message' => 'User successfully updated!'], 200);
+        $token = JWTAuth::fromUser($user);
+
+        return response()->json(['user' => $user, 'token' => $token, 'message' => 'User successfully updated!'], 200);
     }
 
     public function addPoints(Request $request, string $id)
@@ -112,7 +141,7 @@ class UserController extends Controller
         $user->points += $validatedData['points'];
         $user->save();
 
-        return response()->json(['message' => 'User successfully deleted!'], 200);
+        return response()->json(['message' => 'Points added!'], 200);
     }
 
     public function deleteUser(string $id)

@@ -15,6 +15,7 @@ class LoginController extends Controller
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'type_allowed' => 'required'
         ]);
     
         $user = User::where('email', $credentials['email'])->first();
@@ -22,10 +23,16 @@ class LoginController extends Controller
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
+
+        if ($credentials['type_allowed'] != $user->type_user) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        $user->makeHidden(['password']);
     
-        $token = JWTAuth::fromUser($user);
+        $token = JWTAuth::fromUser($user, ['exp' => null]);
     
-        return response()->json(['data' => ['token' => $token], 'message' => 'Login successful'], 200);
+        return response()->json(['token' => $token, 'user' => $user, 'message' => 'Login successful'], 200);
     }
 
     public function logout(Request $request)

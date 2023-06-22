@@ -12,7 +12,7 @@ Route::group(['prefix' => 'v1', 'namespace' => 'use App\Http\Controllers\Api\V1'
 
   Route::group(['middleware' => ['verifyToken', 'verifyManager']], function() {
     Route::get('/users', [UserController::class, 'getAllUsers'])->name('users.getAllUsers');
-    Route::put('/users/{id}', [UserController::class, 'updateUser'])->name('users.updateUser');
+    Route::get('/users/clients', [UserController::class, 'getAllClients'])->name('users.getAllClients');
     Route::delete('/users/{id}', [UserController::class, 'deleteUser'])->name('users.deleteUser');
 
     Route::post('/products', [ProductController::class, 'createProduct'])->name('products.createProduct');
@@ -26,14 +26,16 @@ Route::group(['prefix' => 'v1', 'namespace' => 'use App\Http\Controllers\Api\V1'
 
   Route::group(['middleware' => ['verifyToken']], function() {  
     Route::get('/users/{id}', [UserController::class, 'getUser'])->name('users.getUser');
-    Route::put('/users/{id}/points', [UserController::class, 'addPoints'])->name('users.addPoints');
+    Route::get('/user/recover', [UserController::class, 'recoverUserInfo'])->name('users.recoverUserInfo');
+    Route::put('/users/{id}', [UserController::class, 'updateUser'])->name('users.updateUser');
+    Route::put('/users/{id}/add-points', [UserController::class, 'addPoints'])->name('users.addPoints');
     
     Route::get('/products', [ProductController::class, 'getAllProducts'])->name('products.getAllProducts');
     Route::get('/products/active', [ProductController::class, 'getAllActiveProducts'])->name('products.getAllActiveProducts');
     Route::get('/products/{id}', [ProductController::class, 'getProduct'])->name('products.getProduct');
 
     Route::post('/vouchers/generate', [VoucherController::class, 'generateVoucher'])->name('vouchers.generateVoucher');
-    Route::get('/vouchers/{id}', [VoucherController::class, 'getUserVouchers'])->name('vouchers.getUserVouchers');
+    Route::get('/vouchers/user/{id}', [VoucherController::class, 'getUserVouchers'])->name('vouchers.getUserVouchers');
     Route::put('/vouchers/use', [VoucherController::class, 'useVoucher'])->name('vouchers.useVoucher');
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');

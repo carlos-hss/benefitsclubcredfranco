@@ -16,18 +16,18 @@ class ProductController extends Controller
             return response()->json(['message' => 'No products registered'], 200);
         }
 
-        return response()->json($products, 200);
+        return response()->json(['products' => $products], 200);
     }
 
     public function getAllActiveProducts()
     {
-        $products = Product::where('status', 'A')->get();
+        $products = Product::where('status', 'A')->orderBy('points_cost', 'asc')->get();
 
         if (empty($products)) {
             return response()->json(['message' => 'No products registered'], 200);
         }
 
-        return response()->json($products, 200);
+        return response()->json(['products' => $products], 200);
     }
 
     public function createProduct(Request $request)
