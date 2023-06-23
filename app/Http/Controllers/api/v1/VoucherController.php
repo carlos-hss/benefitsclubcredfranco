@@ -78,6 +78,17 @@ class VoucherController extends Controller
     
         $code = $this->generateUniqueCode();
 
+        $user = User::where('id', $validatedData['user_id'])->first();
+        $product = Product::where('id', $validatedData['product_id'])->first();
+
+        if (!$user) {
+            response()->json(['message' => 'User not found'], 404);
+        }
+
+        if (!$product) {
+            response()->json(['message' => 'Product not found'], 404);
+        }
+
         $voucher = new Voucher();
         $voucher->code = $code;
         $voucher->user_id = $validatedData['user_id'];
@@ -85,6 +96,9 @@ class VoucherController extends Controller
         $voucher->used_date = null;
         $voucher->status = 'C';
         $voucher->save();
+
+        $user->points -= $product->points_cost;
+        $user->save();
     
         return response()->json(['voucher' => $voucher, 'message' => 'Voucher generated'], 200);
     }
@@ -115,13 +129,8 @@ class VoucherController extends Controller
             response()->json(['message' => 'Voucher not found'], 404);
         }
 
-        $user = User::find($voucher->user_id);
-        $product = Product::find($voucher->product_id);
-
         $voucher->status = 'U';
         $voucher->used_date = date('Y-m-d H:i:s');
-
-        $user->points -= $product->points_cost;
 
         $voucher->save();
 
